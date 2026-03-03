@@ -1,0 +1,18 @@
+// pubspec.yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: ^2.15.1
+  firebase_auth: ^4.7.3
+  cloud_firestore: ^4.8.5
+  firebase_storage: ^11.2.6
+  image_picker: ^1.0.4
+  video_player: ^2.7.0
+  record: ^4.4.4
+  just_audio: ^0.9.36
+  permission_handler: ^11.0.1
+  intl: ^0.18.1
+  cached_network_image: ^3.3.0
+  flutter_local_notifications: ^15.1.1
+  path_provider: ^2.1.0
+  http: ^1.1.0

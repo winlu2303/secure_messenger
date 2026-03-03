@@ -1,0 +1,28 @@
+android {
+    compileSdkVersion 34
+
+    defaultConfig {
+        applicationId "com.example.secureMessenger"
+        minSdkVersion 21
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            keyAlias = 'your-key-alias'
+            keyPassword = 'your-key-password'
+            storeFile = file('your-key-store.jks')
+            storePassword = 'your-store-password'
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
