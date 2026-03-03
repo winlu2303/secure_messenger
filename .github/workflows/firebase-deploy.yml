@@ -1,0 +1,70 @@
+name: Deploy to Firebase
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.13.9'
+        channel: 'stable'
+    
+    - name: Check current directory
+      run: |
+        pwd
+        ls -la
+    
+    - name: Navigate to project and install dependencies
+      run: |
+        # Проверяем, где находится pubspec.yaml
+        if [ -f "pubspec.yaml" ]; then
+          echo "Found pubspec.yaml in root"
+          flutter pub get
+        elif [ -f "secure_messenger/pubspec.yaml" ]; then
+          echo "Found pubspec.yaml in secure_messenger folder"
+          cd secure_messenger
+          flutter pub get
+        else
+          echo "Searching for pubspec.yaml..."
+          find . -name "pubspec.yaml" -type f
+          # Если нашли, переходим в ту директорию
+          PUBSPEC_PATH=$(find . -name "pubspec.yaml" -type f | head -1)
+          if [ ! -z "$PUBSPEC_PATH" ]; then
+            cd $(dirname "$PUBSPEC_PATH")
+            flutter pub get
+          else
+            echo "ERROR: pubspec.yaml not found!"
+            exit 1
+          fi
+        fi
+    
+    - name: Build web
+      run: |
+        # Снова проверяем директорию
+        if [ ! -f "pubspec.yaml" ]; then
+          cd secure_messenger 2>/dev/null || cd $(dirname $(find . -name "pubspec.yaml" -type f | head -1))
+        fi
+        flutter build web --release
+    
+    - name: Deploy to Firebase
+      uses: FirebaseExtended/action-hosting-deploy@v0
+      with:
+        repoToken: '${{ secrets.GITHUB_TOKEN }}'
+        firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+        channelId: live
+        projectId: messenger-8660f
+      env:
+        FIREBASE_CLI_EXPERIMENTS: webframeworks
