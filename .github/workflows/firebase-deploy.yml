@@ -1,4 +1,4 @@
-name: Deploy to Firebase
+name: Deploy to Firebase Web
 
 on:
   push:
@@ -7,11 +7,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build_and_deploy:
+  build_and_deploy_web:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
     
     steps:
     - uses: actions/checkout@v3
@@ -19,45 +16,20 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.13.9'
+        flutter-version: '3.29.3'
         channel: 'stable'
     
-    - name: Check current directory
+    - name: Enable web only
       run: |
-        pwd
-        ls -la
+        flutter config --enable-web
+        # Временно игнорируем Android проблемы
+        flutter config --no-enable-android
     
-    - name: Navigate to project and install dependencies
-      run: |
-        # Проверяем, где находится pubspec.yaml
-        if [ -f "pubspec.yaml" ]; then
-          echo "Found pubspec.yaml in root"
-          flutter pub get
-        elif [ -f "secure_messenger/pubspec.yaml" ]; then
-          echo "Found pubspec.yaml in secure_messenger folder"
-          cd secure_messenger
-          flutter pub get
-        else
-          echo "Searching for pubspec.yaml..."
-          find . -name "pubspec.yaml" -type f
-          # Если нашли, переходим в ту директорию
-          PUBSPEC_PATH=$(find . -name "pubspec.yaml" -type f | head -1)
-          if [ ! -z "$PUBSPEC_PATH" ]; then
-            cd $(dirname "$PUBSPEC_PATH")
-            flutter pub get
-          else
-            echo "ERROR: pubspec.yaml not found!"
-            exit 1
-          fi
-        fi
+    - name: Get dependencies
+      run: flutter pub get
     
     - name: Build web
-      run: |
-        # Снова проверяем директорию
-        if [ ! -f "pubspec.yaml" ]; then
-          cd secure_messenger 2>/dev/null || cd $(dirname $(find . -name "pubspec.yaml" -type f | head -1))
-        fi
-        flutter build web --release
+      run: flutter build web --release
     
     - name: Deploy to Firebase
       uses: FirebaseExtended/action-hosting-deploy@v0
@@ -66,5 +38,3 @@ jobs:
         firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
         channelId: live
         projectId: messenger-8660f
-      env:
-        FIREBASE_CLI_EXPERIMENTS: webframeworks
